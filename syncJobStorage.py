@@ -1,7 +1,7 @@
 import dropbox
 import requests
 import json
-from mongoDBClient import update_number_of_storage, get_company_list, create_new_company
+from mongoDBClient import update_number_of_storage, get_company_list, create_new_company, get_product_number_by_companyID_and_productID
 
 
 home_address_name = '/simple storage JD'
@@ -72,10 +72,11 @@ def sync_work(product_list_array, company_name):
 		product_ID = product_list_array[i]['ID']
 		name = product_list_array[i]['name']
 
-		print '##############################'
-		update_number_of_storage(belingcompanyID, product_ID, number_in_storage, name)
-		print 'name: '+name+', '+number_in_storage
-		
+		if(is_DB_need_to_update(belingcompanyID,product_ID,number_in_storage, name)):
+			update_number_of_storage(belingcompanyID, product_ID, number_in_storage, name)
+			print '##############################'
+			print name + ' need to update ' + number_in_storage
+			print '##############################'
 	
 def get_last_update_storage_number_in_log(product_detail_file_path):
 	product_detail_raw = get_file_content(product_detail_file_path)
@@ -84,6 +85,17 @@ def get_last_update_storage_number_in_log(product_detail_file_path):
 	json_size = len(product_detail_array)
 	return product_detail_array[json_size-1]['howmany']
 
+def is_DB_need_to_update(belingcompanyID, product_ID, number_in_storage, name):
+	number = get_product_number_by_companyID_and_productID(belingcompanyID, product_ID, name)
+	if number is None:
+		return True
+	elif number is "Duplicate":
+		return True
+	else:
+		if number != number_in_storage:
+			return True
+		else:
+			return False
 
 def sync_storage_number_between_log_and_mongoDB(company_name):
 	print '##########################################################################################'

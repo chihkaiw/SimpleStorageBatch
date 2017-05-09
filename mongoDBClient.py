@@ -10,8 +10,9 @@ client = pymongo.MongoClient(MONGODB_URI)
 db = client.get_default_database()
 
 def update_number_of_storage(belingcompanyID, product_ID, howmany, name):
-    product_in_storage = get_product_info(belingcompanyID, product_ID)
-    size_of_cursor = len(product_in_storage)
+    product_storage_number_Collection = db['product_storage_number']
+    cursor = product_storage_number_Collection.find({'belingcompanyID':belingcompanyID,'product_ID':product_ID})
+    size_of_cursor = cursor.count()
 
     if size_of_cursor > 0:
          update_old_item_in_storage(belingcompanyID, product_ID, howmany)
@@ -35,13 +36,18 @@ def get_new_item_Json_Array(belingcompanyID, product_ID, howmany, name):
     result = [{'belingcompanyID':belingcompanyID, 'product_ID':product_ID, 'howmany': howmany, 'name': name}]
     return result
 
-def get_product_info(belingcompanyID, product_ID):
-    product_storage_number = db['product_storage_number']
-    cursor = product_storage_number.find({'belingcompanyID':belingcompanyID,'product_ID':product_ID})
-    #for doc in cursor:
-        #print 'PRODUCT: ', doc
-
-    return get_array_from_JSON_String(dumps(cursor))
+def get_product_number_by_companyID_and_productID(belingcompanyID, product_ID,name):
+    product_storage_number_Collection = db['product_storage_number']
+    cursor = product_storage_number_Collection.find({'belingcompanyID':belingcompanyID,'product_ID':product_ID})
+    
+    cursor_size = cursor.count()
+    if cursor_size is 1:
+        for post in cursor:
+            return post['howmany']
+    elif cursor_size > 1:
+        return "Duplicate"
+    else:
+        return None
 
 def get_company_list():
     companyList_Collection = db['company_list']
